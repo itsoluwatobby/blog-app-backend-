@@ -1,76 +1,69 @@
 const Posts = require('../model/Posts');
 const asyncHandler = require('express-async-handler');
-const { format } = require('date-fns');
 
 const getAllPosts = asyncHandler(async (req, res) => {
    const posts = await Posts.find().lean();
    if(!posts?.length) {
-       res.status(400).json({ message: ' No post found' })
+       res.status(400).json({ status: false, message: ' No post found' })
    }
    else {
-      res.status(200).json({data: posts})
+      res.status(200).json({ status: true, posts })
    }
 })
 
 const createPosts = asyncHandler(async (req, res) => {
-   const { title, post } = req.body;
+   const inputValue = req.body;
+   if(!inputValue) return res.status(400).json({ status: false, message: `All fields are required` })
 
-   if(!title || !post) return res.status(400).json({message: `All fields are required`})
+   const duplicate = await Posts.findOne({ title: inputValue.title })
+   duplicate && res.status(400).json({ status: false, message: 'Duplicate title' })
 
-   const duplicate = await Posts.findOne({ title })
-   duplicate && res.status(400).json({message: 'Duplicate title'})
-
-   const datetime = format(new Date(), 'MMMM dd yyyy | pp')
-   const newPost = { title, datePost: datetime, post, completed: true}
+   const newPost = { ...inputValue, completed: true}
    const result = await Posts.create(newPost)
 
-   res.status(201).json(result)
+   res.status(201).json({ status: true, result })
 })
 
 const editPost = asyncHandler(async (req, res) => {
    const id = req.params.id
-   const { title, post } = req.body;
+   const inputValue = req.body;
 
-   if(!id) return res.status(400).json({message: `Post id required`})
-   if(!title || !post) return res.status(400).json({message: `All fields are required`})
+   if(!id) return res.status(403).json({ status: false, message: `Post id required` })
+   if(!inputValue) return res.status(400).json({ status: false, message: `All fields are required` })
 
-   const currentPost = await Posts.findById(id).exec();
-   !currentPost && res.status(400).res.json({message: `Post with id: ${id} not found`})
+   const currentPost = await Posts.findByIdAndUpdate(id, { $set: inputValue })
+   !currentPost && res.status(404).res.json({ status: false, message: `Post with id: ${id} not found` })
 
-   const datetime = format(new Date(), 'MMMM dd yyyy | pp')
-
-   currentPost.title = title;
-   currentPost.datePost = datetime;
-   currentPost.post = post;
-   
-   const result = await currentPost.save();
-
-   res.status(200).json(`Post (${result.title}) updated`);
+   res.status(200).json({ status: true, currentPost });
 })
 
 const deletePost = asyncHandler(async (req, res) => {
    const id = req.params.id;
-
-   if(!id) return res.status(400).json({message: 'id required'})
-
-   const post = await Posts.findById(id).exec();
-   if(!post) {
-      return res.status(400).json({message: `Post with id: ${id} not found`}) 
+   if(!id) return res.status(400).json({ status: false, message: 'id required' })
+   const posts = await Posts.find().lean()
+   //delete post by id
+   if(posts.length === 1) return res.sendStatus(204)
+   
+   else{
+      const post = await Posts.findById(id).exec();
+      if(!post) {
+         return res.status(400).json({ status: false, message: `Post with id: ${id} not found` }) 
+      }
+         await post.deleteOne()
+      res.sendStatus(204)
    }
-      await post.deleteOne()
-   res.sendStatus(204)
 })
 
 const getPost = asyncHandler(async (req, res) => {
    const id = req.params.id
-   
+ 
    if(!id) {
-      return res.status(400).json({message: `Post id required`})
+      return res.status(400).json({ status: false, message: `Post id required` })
    }
    const post = await Posts.findById(id).exec();
-   !post && res.status(400).res.json({message: `Post with id: ${id} not found`})
+   !post && res.status(400).res.json({ status: false, message: `Post with id: ${id} not found` })
 
-   res.status(200).json(post)
+   res.status(200).json({ status: true, post })
 })
 
 module.exports = { getAllPosts, createPosts, editPost, deletePost, getPost }

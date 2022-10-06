@@ -16,10 +16,10 @@ app.use(express.json())
 app.use(cookieParser())
 
 //blog post routes
-app.use('/api/v1', blogRoutes)
+app.use('/api/blog', blogRoutes)
 
 app.all('*', (req, res) => {
-    res.status(400).json({ success: false, messsage: 'resource not found' })
+    res.status(400).json({ success: false, message: 'resource not found' })
 })
     
 mongoose.connection.once('open', () => {

@@ -7,10 +7,10 @@ const postSchema = new mongoose.Schema(
          required: true, 
          unique: true 
       },
-      datePost: {
+      dateTime: {
          type: String
       },
-      post: { 
+      body: { 
          type: String, 
          required: true 
       },
