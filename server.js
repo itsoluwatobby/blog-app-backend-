@@ -18,6 +18,10 @@ app.use(cookieParser())
 //blog post routes
 app.use('/api/blog', blogRoutes)
 
+app.get('/', (req, res) => {
+    res.status(200).json({status: true, message: 'server up and running'})
+})
+
 app.all('*', (req, res) => {
     res.status(400).json({ success: false, message: 'resource not found' })
 })
