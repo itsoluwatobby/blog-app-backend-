@@ -6,12 +6,16 @@ const mongoose = require('mongoose');
 const corsOptions = require('./config/corsOptions');
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
-const blogRoutes = require('./route/blogRoutes')
+const blogRoutes = require('./route/blogRoutes');
+const { default: helmet } = require('helmet');
+const morgan = require('morgan');
 const PORT = process.env.PORT || 4500;
 
 connectDB();
 
 app.use(cors(corsOptions))
+app.use(helmet())
+app.use(morgan('common'))
 app.use(express.json())
 app.use(cookieParser())
 
